@@ -29,6 +29,7 @@ pip install numpy scipy opencv-python matplotlib tqdm wandb
 
 ##  Dataset: MPII Human Pose
 **Shortcut:** You can download a pre-organized MPII folder with the correct structure here: [Google Drive link](https://drive.google.com/drive/folders/14PblxOBLduTq2CtRAGioKuL0o6W0W3-d?usp=sharing)
+
 This project expects **MPII** images and the official annotation `.mat` file.
 
 - **Annotations**: `mpii_human_pose_v1_u12_1.mat`
