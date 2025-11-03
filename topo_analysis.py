@@ -103,7 +103,6 @@ def plot_activation_neighbor_corr(module, model, loader, device, *,
 
     F = torch.cat(feats, 0)                 # [N,C,H',W']
     A = F.mean(dim=(2,3))                   # [N,C]
-    A = (A - A.mean(dim=1, keepdim=True)) / (A.std(dim=1, keepdim=True) + 1e-6)
     A = (A - A.mean(dim=0, keepdim=True)) / (A.std(dim=0, keepdim=True) + 1e-6)
     Cmat = torch.clamp((A.T @ A) / max(1, A.shape[0]-1), -1, 1).cpu().numpy()
 
@@ -179,58 +178,58 @@ def morans_I_strength(model, topo=False, grid_hw=None):
             I_vals.append(I)
     return float(np.mean(I_vals)), float(np.std(I_vals))
 
-@torch.no_grad()
-def plot_coactivation_distance_curve(model, loader, device, *,
-                                     topo=False, grid_hw=None, epoch=None,
-                                     max_batches=16, alphas=(0.1,0.3,0.5,0.7,0.9),
-                                     wandb_tag="plots/topo/coact_distance",
-                                     wandblog=False, save_plots=False, save_dir=None):
-    feats = []
-    hook_layer = getattr(model, "topo", None) if topo else model.deconv
-    h = hook_layer.register_forward_hook(lambda m, i, o: feats.append(o.detach()))
-    for b,(x,_) in enumerate(loader):
-        x = x.to(device, non_blocking=True)
-        _ = model(x)
-        if b+1 >= max_batches: break
-    h.remove()
-    if not feats: return
+# @torch.no_grad()
+# def plot_coactivation_distance_curve(model, loader, device, *,
+#                                      topo=False, grid_hw=None, epoch=None,
+#                                      max_batches=16, alphas=(0.1,0.3,0.5,0.7,0.9),
+#                                      wandb_tag="plots/topo/coact_distance",
+#                                      wandblog=False, save_plots=False, save_dir=None):
+#     feats = []
+#     hook_layer = getattr(model, "topo", None) if topo else model.deconv
+#     h = hook_layer.register_forward_hook(lambda m, i, o: feats.append(o.detach()))
+#     for b,(x,_) in enumerate(loader):
+#         x = x.to(device, non_blocking=True)
+#         _ = model(x)
+#         if b+1 >= max_batches: break
+#     h.remove()
+#     if not feats: return
 
-    F = torch.cat(feats, 0)                       # [N,C,H',W']
-    A = F.mean(dim=(2,3))                         # [N,C]
-    A = (A - A.mean(0, keepdim=True)) / (A.std(0, keepdim=True)+1e-6)
-    C = A.shape[1]
+#     F = torch.cat(feats, 0)                       # [N,C,H',W']
+#     A = F.mean(dim=(2,3))                         # [N,C]
+#     A = (A - A.mean(0, keepdim=True)) / (A.std(0, keepdim=True)+1e-6)
+#     C = A.shape[1]
 
-    # Channel grid
-    def _auto_channel_grid(C):
-        h=int(C**0.5)
-        while C%h!=0: h-=1
-        return h, C//h
-    if topo:
-        Gh, Gw = int(model.topo.grid_h), int(model.topo.grid_w)
-    else:
-        Gh, Gw = _auto_channel_grid(C) if grid_hw is None else grid_hw
+#     # Channel grid
+#     def _auto_channel_grid(C):
+#         h=int(C**0.5)
+#         while C%h!=0: h-=1
+#         return h, C//h
+#     if topo:
+#         Gh, Gw = int(model.topo.grid_h), int(model.topo.grid_w)
+#     else:
+#         Gh, Gw = _auto_channel_grid(C) if grid_hw is None else grid_hw
 
-    Cmat = torch.clamp((A.T @ A) / max(1, A.shape[0]-1), -1, 1).cpu().numpy()
+#     Cmat = torch.clamp((A.T @ A) / max(1, A.shape[0]-1), -1, 1).cpu().numpy()
 
-    coords = np.stack(np.meshgrid(np.arange(Gh), np.arange(Gw), indexing="ij"), -1).reshape(-1,2)
-    dists = np.sqrt(((coords[:,None,:]-coords[None,:,:])**2).sum(-1))  # [C,C]
+#     coords = np.stack(np.meshgrid(np.arange(Gh), np.arange(Gw), indexing="ij"), -1).reshape(-1,2)
+#     dists = np.sqrt(((coords[:,None,:]-coords[None,:,:])**2).sum(-1))  # [C,C]
 
-    xs, ys = [], []
-    for a in alphas:
-        mask = (Cmat >= a) & (~np.eye(C, dtype=bool))
-        if mask.sum() == 0:
-            xs.append(a); ys.append(np.nan); continue
-        mean_dist = float(dists[mask].mean())
-        xs.append(a); ys.append(mean_dist)
+#     xs, ys = [], []
+#     for a in alphas:
+#         mask = (Cmat >= a) & (~np.eye(C, dtype=bool))
+#         if mask.sum() == 0:
+#             xs.append(a); ys.append(np.nan); continue
+#         mean_dist = float(dists[mask].mean())
+#         xs.append(a); ys.append(mean_dist)
 
-    fig = plt.figure(figsize=(5,4))
-    plt.plot(xs, ys, marker='o')
-    plt.xlabel("Correlation threshold α"); plt.ylabel("Mean distance between co-activated pairs")
-    plt.title("Co-activation spatial clustering")
-    plt.grid(True); plt.tight_layout()
-    if wandblog:
-        wandb.log({f"{wandb_tag}": wandb.Image(fig)}, step=epoch)
-    if save_plots:
-        fig_path = f"{save_dir}/coactivation_distance_curve_epoch_{epoch if epoch is not None else 'final'}.png"
-        fig.savefig(fig_path)
-    plt.close(fig)
+#     fig = plt.figure(figsize=(5,4))
+#     plt.plot(xs, ys, marker='o')
+#     plt.xlabel("Correlation threshold α"); plt.ylabel("Mean distance between co-activated pairs")
+#     plt.title("Co-activation spatial clustering")
+#     plt.grid(True); plt.tight_layout()
+#     if wandblog:
+#         wandb.log({f"{wandb_tag}": wandb.Image(fig)}, step=epoch)
+#     if save_plots:
+#         fig_path = f"{save_dir}/coactivation_distance_curve_epoch_{epoch if epoch is not None else 'final'}.png"
+#         fig.savefig(fig_path)
+#     plt.close(fig)
