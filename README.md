@@ -99,8 +99,6 @@ Both training scripts accept a shared set of CLI flags, plus a few model-specifi
   Use ImageNet-pretrained backbone weights or start from scratch.
 - `--arch {resnet18,resnet34,resnet50,resnet101,resnet152}`  
   Backbone architecture.  
-  - SimpleBaseline default: `resnet152`  
-  - TopoModel default: `resnet18`
 - `--mat-path` (default: `./mpii/mpii_human_pose_v1_u12_1.mat`)  
   Path to the official MPII `.mat` annotations file.
 - `--img-dir` (default: `./mpii/images`)  
