@@ -140,7 +140,7 @@ def add_argument_parser():
     # Logging + plotting flags
     parser.add_argument('--wandb', dest='wandb', action='store_true', help='Enable Weights & Biases logging')
     parser.add_argument('--no-wandb', dest='wandb', action='store_false', help='Disable Weights & Biases logging')
-    parser.set_defaults(wandb=True)
+    parser.set_defaults(wandb=False)
 
     parser.add_argument('--save-plts', dest='save_plts', action='store_true', help='Enable saving plots')
     parser.add_argument('--no-save-plts', dest='save_plts', action='store_false', help='Disable saving plots')

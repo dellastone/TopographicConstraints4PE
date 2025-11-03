@@ -113,7 +113,7 @@ def add_argument_parser():
     # Logging and plotting toggles
     parser.add_argument('--wandb', dest='wandb', action='store_true', help='Enable Weights & Biases logging')
     parser.add_argument('--no-wandb', dest='wandb', action='store_false', help='Disable Weights & Biases logging')
-    parser.set_defaults(wandb=True)
+    parser.set_defaults(wandb=False)
 
     parser.add_argument('--save-plts', dest='save_plts', action='store_true', help='Enable saving plots')
     parser.add_argument('--no-save-plts', dest='save_plts', action='store_false', help='Disable saving plots')
@@ -126,7 +126,7 @@ def add_argument_parser():
     parser.set_defaults(pretrained=True)
 
     parser.add_argument('--arch', choices=['resnet18','resnet34','resnet50','resnet101','resnet152'],
-                        default='resnet152', help='Backbone architecture')
+                        default='resnet18', help='Backbone architecture')
 
     parser.add_argument('--mat-path', default="./mpii/mpii_human_pose_v1_u12_1.mat",
                         help='Path to MPII .mat annotations file')
