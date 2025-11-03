@@ -23,7 +23,6 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 pip install numpy scipy opencv-python matplotlib tqdm wandb
 ```
 
-> If you are on CPU-only, install the CPU wheels for torch/torchvision accordingly.
 
 ---
 
