@@ -28,7 +28,7 @@ pip install numpy scipy opencv-python matplotlib tqdm wandb
 ---
 
 ##  Dataset: MPII Human Pose
-
+**Shortcut:** You can download a pre-organized MPII folder with the correct structure here: [Google Drive link](https://drive.google.com/drive/folders/14PblxOBLduTq2CtRAGioKuL0o6W0W3-d?usp=sharing
 This project expects **MPII** images and the official annotation `.mat` file.
 
 - **Annotations**: `mpii_human_pose_v1_u12_1.mat`
@@ -72,66 +72,17 @@ Key elements:
 
 ---
 
-## Quickstart
+##  Minimal Examples
 
-### Train the SimpleBaseline
-
+**Baseline:**
 ```bash
-python trainSimpleBaseline.py \
-  --device cuda \
-  --batch-size 64 \
-  --lr 1e-4 \
-  --epochs 20 \
-  --val-split 0.1 \
-  --save-dir checkpoints \
-  --num-keypoints 16 \
-  --pretrained \
-  --arch resnet152 \
-  --mat-path ./mpii/mpii_human_pose_v1_u12_1.mat \
-  --img-dir  ./mpii/images \
-  --wandb \
-  --save-plts
+python trainSimpleBaseline.py --arch resnet18 --no-wandb --save-plts
 ```
 
-**Notable flags** (defaults in brackets):
-- `--device [cuda]`  e.g., `cpu`, `cuda`, `cuda:0`
-- `--batch-size [64]`, `--lr [1e-4]`, `--epochs [20]`, `--val-split [0.1]`
-- `--pretrained / --no-pretrained`
-- `--arch [resnet152]` (choices: resnet18/34/50/101/152)
-- `--wandb` *enables* Weights & Biases logging (use `--no-wandb` to disable)
-- `--save-plts` saves analysis plots under `plots/<run_name>/`
-
-Outputs:
-- **Checkpoints**: `checkpoints/<run_name>/<run_name>.pth`
-- **Plots & metrics** (if `--save-plts`): `plots/<run_name>/` + `metrics.csv`
-- **W&B logs** (if `--wandb`): project `ABNS`
-
-### Train the TopoModel
-
+**TopoModel:**
 ```bash
-python trainTopoModel.py \
-  --device cuda \
-  --batch-size 64 \
-  --lr 1e-4 \
-  --epochs 20 \
-  --val-split 0.1 \
-  --save-dir checkpoints \
-  --num-keypoints 16 \
-  --pretrained \
-  --arch resnet18 \
-  --mat-path ./mpii/mpii_human_pose_v1_u12_1.mat \
-  --img-dir  ./mpii/images \
-  --spatial-lambda 0.5 \
-  --topo-grid 16 16 \
-  --wandb \
-  --save-plts
+python trainTopoModel.py --arch resnet34 --no-wandb --save-plts
 ```
-
-**Additional flags**:
-- `--spatial-lambda [0.5]` : base λ for the spatial (topographic) loss.
-- `--topo-grid [16 16]` : grid **Gh Gw**. Aim for `Gh*Gw == 256` to match the deconv output channels.
-
-The training script uses a cosine schedule to smoothly scale `spatial-lambda` across epochs.
 
 ---
 
@@ -147,16 +98,4 @@ Project name is **ABNS** by default. Each run name includes the backbone, model 
 
 ---
 
-##  Minimal Examples
 
-**Baseline (quick CPU test):**
-```bash
-python trainSimpleBaseline.py --device cpu --epochs 1 --no-wandb --no-save-plts
-```
-
-**TopoModel with weaker spatial regularization:**
-```bash
-python trainTopoModel.py --spatial-lambda 0.2 --topo-grid 16 16 --arch resnet34
-```
-
----
