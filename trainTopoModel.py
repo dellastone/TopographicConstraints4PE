@@ -1,4 +1,3 @@
-#trainTopoModel.py
 import argparse
 import os
 import random
@@ -71,13 +70,10 @@ def validate(model, loader, criterion, device, epoch=None, max_epochs=None, wand
             loop.set_postfix(val_loss=f"{running_loss / ((loop.n + 1) * loader.batch_size):.4f}", val_mse=f"{running_mse / ((loop.n + 1) * loader.batch_size):.4f}", val_spatial=f"{running_spatial / ((loop.n + 1) * loader.batch_size):.4f}", val_pckh=f"{running_pckh / ((loop.n + 1) * loader.batch_size):.4f}")
 
     plot_image_with_heatmaps(images[0], preds[0], radius=4, color=(0,255,0), wandblog=wandblog, save_plots=save_plots, save_dir=save_dir)
-        # plot_image_with_heatmaps(images[0], heatmaps[0], radius=4, color=(255,0,0), pause=2.0)
 
     return running_loss / len(loader.dataset), running_mse / len(loader.dataset), running_spatial / len(loader.dataset), running_pckh / len(loader.dataset)
 
-
-def main():
-
+def add_argument_parser():
     parser = argparse.ArgumentParser(description="Train and validate TopoBaseline model.")
 
     parser.add_argument('--device', default='cuda', help='Device to use for training (e.g., cuda:0, cpu)')
@@ -111,10 +107,12 @@ def main():
                         help='Path to MPII .mat annotations file')
     parser.add_argument('--img-dir', default="./mpii/images",
                         help='Directory containing MPII images')
+    return parser
 
+def main():
+    parser = add_argument_parser()
     args = parser.parse_args()
 
-    # --- Assign back to constants ---
     WANDBLOG = args.wandb
     SAVE_PLOTS = args.save_plts
     NUM_KEYPOINTS = args.num_keypoints
@@ -166,18 +164,21 @@ def main():
                 writer = csv.writer(f)
                 writer.writerow(headers)
 
+
     mse_loss_fn = nn.MSELoss()
     def Criterion(preds, targets, epoch=None, max_epochs=None, min_scale=0.1):
         scale = 1.0
         if (epoch is not None) and (max_epochs is not None) and max_epochs > 1:
             cosv = 0.5 * (1 + math.cos(math.pi * epoch / (max_epochs - 1)))
             scale = min_scale + (1.0 - min_scale) * cosv
+            
         mse_loss = mse_loss_fn(preds, targets)
-        ws_loss = model.topo_reg_loss(SPATIAL_LAMBDA * scale, use_bn_effective=False)
+        ws_loss = model.topo_reg_loss(SPATIAL_LAMBDA * scale)
         loss = mse_loss + ws_loss 
+        
         return loss, mse_loss, ws_loss, SPATIAL_LAMBDA * scale
 
-    print("Using BASELINE MODEL")
+    print("Using TOPO MODEL")
     model = TopoModel(NUM_KEYPOINTS, ARCHITECTURE, PRETRAINED, TOPO_GRID[0], TOPO_GRID[1]).to(device)
 
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)

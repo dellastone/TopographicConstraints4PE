@@ -5,8 +5,10 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import wandb
+
 def _wandb_fig(image, caption=None):
     return wandb.Image(image, caption=caption) if caption else wandb.Image(image)
+
 class EarlyStopping:
     def __init__(self, patience=3, verbose=True, name="null"):
         self.patience = patience
@@ -142,7 +144,6 @@ def plot_image_with_heatmaps(image_tensor: torch.Tensor,
     if save_plots:
         fig_path = f"{save_dir}/predicted_keypoints_overlay.png"
         fig.savefig(fig_path)
-    # plt.pause(pause)
     plt.close(fig)
 
 

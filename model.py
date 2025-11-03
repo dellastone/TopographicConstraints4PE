@@ -144,6 +144,6 @@ class TopoModel(nn.Module):
         x = self.topo(x)
         return self.head(x)
     
-    def topo_reg_loss(self, lambda_ws=0.0, use_bn_effective=False):
-        ws = self.topo.weight_similarity_loss(use_bn_effective=use_bn_effective)
+    def topo_reg_loss(self, lambda_ws=0.0):
+        ws = self.topo.weight_similarity_loss()
         return lambda_ws * ws

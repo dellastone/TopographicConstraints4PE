@@ -212,8 +212,6 @@ def plot_coactivation_distance_curve(model, loader, device, *,
 
     Cmat = torch.clamp((A.T @ A) / max(1, A.shape[0]-1), -1, 1).cpu().numpy()
 
-    # For each alpha: mean grid distance of pairs with r>=alpha
-    import numpy as np, matplotlib.pyplot as plt
     coords = np.stack(np.meshgrid(np.arange(Gh), np.arange(Gw), indexing="ij"), -1).reshape(-1,2)
     dists = np.sqrt(((coords[:,None,:]-coords[None,:,:])**2).sum(-1))  # [C,C]
 

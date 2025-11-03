@@ -24,13 +24,7 @@ def build_edges(H, W, mode="8"):
         return torch.empty(0, 2, dtype=torch.long)
     return torch.tensor(edges, dtype=torch.long)
 
-# ------------ Topographic 1×1 conv (channels arranged on a Gh×Gw grid) ------------
 class TopographicConv2d(nn.Module):
-    """
-    1×1 conv producing C_out = Gh*Gw channels arranged on a Gh×Gw grid.
-    Spatial losses:
-      - WS: mean L2 distance between incoming weight vectors of neighboring channels
-    """
     def __init__(self, in_channels, grid_h=16, grid_w=16,
                  neighbors="8", use_bn=False, bn_affine=False, use_relu=True):
         super().__init__()
@@ -41,7 +35,7 @@ class TopographicConv2d(nn.Module):
         self.register_buffer("edge_index", build_edges(grid_h, grid_w, neighbors), persistent=False)
         self._last_activation = None
         
-        self.reset_parameters(method="orthogonal", equalize_row_norm=False)
+        self.reset_parameters(method="orthogonal")
 
 
     @property
@@ -54,31 +48,18 @@ class TopographicConv2d(nn.Module):
         self._last_activation = y  # (B, C, H, W)
         return y
 
-    def weight_similarity_loss(self, eps: float = 1e-8, squared: bool = False,
-                               use_bn_effective: bool = False):
-        """
-        WS on incoming weights. If use_bn_effective=True and BN is present with running stats,
-        uses effective scale gamma/sigma. Default is raw weights (paper-faithful if BN is affine=False).
-        """
+    def weight_similarity_loss(self):
+
         if self.edge_index.numel() == 0:
             return self.conv.weight.new_zeros(())
 
-        W = self.conv.weight.view(self.out_channels, -1)  # (C, Cin)
-        if use_bn_effective and (self.bn is not None):
-            C = self.out_channels
-            gamma = (self.bn.weight if getattr(self.bn, "affine", False)
-                     else torch.ones(C, device=W.device, dtype=W.dtype)).view(-1,1)
-            if hasattr(self.bn, "running_var") and self.bn.running_var is not None:
-                sigma = (self.bn.running_var + eps).sqrt().view(-1,1)
-            else:
-                sigma = torch.ones_like(gamma)
-            W = W * (gamma / sigma)
+        W = self.conv.weight.view(self.out_channels, -1) 
 
         u, v = self.edge_index[:,0], self.edge_index[:,1]
-        d2 = (W[u] - W[v]).pow(2).sum(dim=1)  # (E,)
-        return d2.mean() if squared else (d2 + eps).sqrt().mean()
+        d2 = (W[u] - W[v]).pow(2).sum(dim=1)  
+        return d2.mean()
     
-    def reset_parameters(self, method: str = "orthogonal", equalize_row_norm: bool = False):
+    def reset_parameters(self, method: str = "orthogonal"):
         """
         method ∈ {"orthogonal","kaiming","equalnorm"}.
         - "orthogonal": semi-orthogonal rows with ReLU gain (default; robust for WS).
@@ -119,7 +100,6 @@ class TopographicConv2d(nn.Module):
         if self.conv.bias is not None:
             nn.init.zeros_(self.conv.bias)
 
-        # ---- BN (if used) ----
         if self.bn is not None:
             self.bn.reset_running_stats()
             if getattr(self.bn, "affine", False):

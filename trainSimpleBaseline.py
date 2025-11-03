@@ -66,10 +66,7 @@ def validate(model, loader, criterion, device, wandblog: bool = False, save_plot
 
 
     return running_loss / len(loader.dataset), running_pckh / len(loader.dataset)
-
-
-def main():
-
+def add_argument_parser():
     parser = argparse.ArgumentParser(description="Train and validate TopoBaseline model.")
     parser.add_argument('--device', default='cuda', help='Device to use for training (e.g., cuda:0, cpu)')
     parser.add_argument('--batch-size', type=int, default=64)
@@ -99,7 +96,10 @@ def main():
                         help='Path to MPII .mat annotations file')
     parser.add_argument('--img-dir', default="./mpii/images",
                         help='Directory containing MPII images')
+    return parser
 
+def main():
+    parser = add_argument_parser()
     args = parser.parse_args()
 
     # Assign back to your constants
