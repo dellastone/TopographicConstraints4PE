@@ -72,6 +72,55 @@ Key elements:
 
 ---
 
+## Command-line Arguments
+
+Both training scripts accept a shared set of CLI flags, plus a few model-specific ones.
+
+### Common (both `trainSimpleBaseline.py` and `trainTopoModel.py`)
+- `--device` (default: `cuda`)  
+  Device string like `cuda`, `cuda:0`, or `cpu`. Falls back to CPU if CUDA isn’t available.
+- `--batch-size` (default: `64`)  
+  Global batch size per step.
+- `--lr` (default: `1e-4`)  
+  Learning rate for AdamW.
+- `--epochs` (default: `20`)  
+  Number of training epochs.
+- `--val-split` (default: `0.1`)  
+  Fraction of the dataset used for validation (split is random each run).
+- `--save-dir` (default: `checkpoints`)  
+  Directory where the best model checkpoint is saved. A subfolder with the run name is created inside.
+- `--wandb` / `--no-wandb` (default: `--wandb`)  
+  Enable/disable Weights & Biases logging (project name: `ABNS`).
+- `--save-plts` / `--no-save-plts` (default: `--no-save-plts`)  
+  Save plots and metrics to `./plots/<run_name>/`. Also writes `metrics.csv`.
+- `--num-keypoints` (default: `16`)  
+  Number of keypoints (MPII uses 16).
+- `--pretrained` / `--no-pretrained` (default: `--pretrained`)  
+  Use ImageNet-pretrained backbone weights or start from scratch.
+- `--arch {resnet18,resnet34,resnet50,resnet101,resnet152}`  
+  Backbone architecture.  
+  - SimpleBaseline default: `resnet152`  
+  - TopoModel default: `resnet18`
+- `--mat-path` (default: `./mpii/mpii_human_pose_v1_u12_1.mat`)  
+  Path to the official MPII `.mat` annotations file.
+- `--img-dir` (default: `./mpii/images`)  
+  Directory with the MPII JPEG images.
+
+**Run/outputs:**  
+Each run gets a name like `<ARCH>_<ModelName>_time_<timestamp>`.  
+- Checkpoints: `./checkpoints/<run_name>/<run_name>.pth` (best by val loss)  
+- Plots/metrics (if `--save-plts`): `./plots/<run_name>/metrics.csv` plus figures
+
+### TopoModel-specific (`trainTopoModel.py`)
+- `--spatial-lambda` (default: `0.5`)  
+  Base weight λ of the topographic spatial regularization. Internally annealed with a cosine schedule during training.
+- `--topo-grid Gh Gw` (default: `16 16`)  
+  Grid size for the topographic layer (channels arranged on Gh×Gw; ideally product ≈ number of topo channels, e.g., 256).
+
+### SimpleBaseline-specific (`trainSimpleBaseline.py`)
+_No extra flags beyond the common ones._
+
+---
 ##  Minimal Examples
 
 **Baseline:**
