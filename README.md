@@ -65,13 +65,6 @@ trainSimpleBaseline.py  # Training script for SimpleBaseline
 trainTopoModel.py       # Training script for TopoModel (with spatial regularization)
 ```
 
-Key elements:
-- **Heatmaps** are generated at `(64, 64)` by default from normalized keypoints (see `generate_heatmaps` in `dataset.py`).
-- **PCKh** computation is in `utils.py` (`compute_pckh_from_heatmaps`).
-- **Topographic regularization** is implemented in `TopographicConv2d.weight_similarity_loss` (see `topographic.py`), used by `TopoModel.topo_reg_loss`.
-
----
-
 ## Command-line Arguments
 
 Both training scripts accept a shared set of CLI flags, plus a few model-specific ones.
